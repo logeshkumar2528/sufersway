@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merged Real-Time Firebase Data</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <script>
+        function fetchData() {
+            fetch("fetchData.php") // Replace with the actual PHP script URL
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById("output").innerHTML = `<p>Error: ${data.error}</p>`;
+                    } else {
+                        const { random_numbers, status, hi } = data;
+                        const mergedTableBody = document.getElementById("mergedTableBody");
+                        mergedTableBody.innerHTML = ''; // Clear previous rows
+
+                        let sNo = 1; // Serial number counter
+
+                        // Populate the first table with merged data
+                        for (const clientId in random_numbers) {
+                            const clientNumbers = random_numbers[clientId];
+                            const clientStatus = status[clientId] || { status: "", timestamp: "" };
+
+                            for (const key in clientNumbers) {
+                                const entry = clientNumbers[key];
+                                const newRow = mergedTableBody.insertRow();
+
+                                const sNoCell = newRow.insertCell(0);
+                                const clientIdCell = newRow.insertCell(1);
+                                const numberCell = newRow.insertCell(2);
+                                const numberDateCell = newRow.insertCell(3);
+                                const numberTimeCell = newRow.insertCell(4);
+                                const statusCell = newRow.insertCell(5);
+                                const statusDateCell = newRow.insertCell(6);
+                                const statusTimeCell = newRow.insertCell(7);
+                                const messageCell = newRow.insertCell(8);
+                                const messageDateCell = newRow.insertCell(9);
+                                const messageTimeCell = newRow.insertCell(10);
+
+                                sNoCell.innerText = sNo++;
+                                clientIdCell.innerText = clientId;
+                                numberCell.innerText = entry.number;
+
+                                const numberDate = new Date(entry.timestamp * 1000);
+                                numberDateCell.innerText = numberDate.toLocaleDateString();
+                                numberTimeCell.innerText = numberDate.toLocaleTimeString();
+
+                                statusCell.innerText = clientStatus.status;
+
+                                const statusDate = new Date(clientStatus.timestamp * 1000);
+                                statusDateCell.innerText = statusDate.toLocaleDateString();
+                                statusTimeCell.innerText = statusDate.toLocaleTimeString();
+
+                                const messageData = hi[key] || { message: "", timestamp: "" };
+                                messageCell.innerText = messageData.message;
+
+                                const messageDate = new Date(messageData.timestamp * 1000);
+                                messageDateCell.innerText = messageDate.toLocaleDateString();
+                                messageTimeCell.innerText = messageDate.toLocaleTimeString();
+                            }
+                        }
+
+                        // Populate the second table with only 'hi' data
+                        const hiTableBody = document.getElementById("hiTableBody");
+                        hiTableBody.innerHTML = ''; // Clear previous rows
+
+                        let hiSNo = 1; // Serial number counter for the second table
+                        for (const key in hi) {
+                            const entry = hi[key];
+                            const newRow = hiTableBody.insertRow();
+
+                            const sNoCell = newRow.insertCell(0);
+                            const clientIdCell = newRow.insertCell(1);
+                            const messageCell = newRow.insertCell(2);
+                            const messageDateCell = newRow.insertCell(3);
+                            const messageTimeCell = newRow.insertCell(4);
+
+                            sNoCell.innerText = hiSNo++;
+                            clientIdCell.innerText = entry.client_id;
+                            messageCell.innerText = entry.message;
+
+                            const messageDate = new Date(entry.timestamp * 1000);
+                            messageDateCell.innerText = messageDate.toLocaleDateString();
+                            messageTimeCell.innerText = messageDate.toLocaleTimeString();
+                        }
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("output").innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+                });
+        }
+
+        // Automatically fetch data every 5 seconds
+        setInterval(fetchData, 5000);
+        window.onload = fetchData; // Initial fetch
+    </script>
+</head>
+<body>
+    <h1>Merged Real-Time Firebase Data</h1>
+    <div id="output">
+        <!-- Merged Data Table -->
+        <table id="mergedTable">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Client ID</th>
+                    <th>Number</th>
+                    <th>Client Date</th>
+                    <th>Client Time</th>
+                    <th>App Status</th>
+                    <th>Status Date</th>
+                    <th>Status Time</th>
+                    <th>Message</th>
+                    <th>Message Date</th>
+                    <th>Message Time</th>
+                </tr>
+            </thead>
+            <tbody id="mergedTableBody">
+                <!-- Merged rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+
+        <!-- Separate Table for hi Data -->
+        <h3>Hi Data (Messages & Timestamps)</h3>
+        <table id="hiTable">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Machine ID</th>
+                    <th>Network Status</th>
+                    <th>Network Date</th>
+                    <th>Network Time</th>
+                </tr>
+            </thead>
+            <tbody id="hiTableBody">
+                <!-- Hi data rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
